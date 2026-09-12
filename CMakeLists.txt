@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.22)
+cmake_minimum_required(VERSION 3.28)
 
 #
 # This file is generated only once,
@@ -11,6 +11,17 @@ cmake_minimum_required(VERSION 3.22)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS ON)
+
+set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
+# Must be set before CXX is enabled (project() below enables it by default).
+# The UUID is tied to this exact CMake version (4.3.1, bundled with the
+# STM32Cube VS Code extension) -- it will need updating if that CMake bundle
+# is ever upgraded.
+set(CMAKE_CXX_MODULE_STD ON)
+set(CMAKE_EXPERIMENTAL_CXX_IMPORT_STD "451f2fe2-a8a2-47c3-bc32-94786d8fc91b")
 
 
 # Define the build type
@@ -33,9 +44,24 @@ enable_language(C ASM)
 
 # Create an executable object type
 add_executable(${CMAKE_PROJECT_NAME})
+# tiny_rta itself has no C++ sources (see dummy_lib below for those), so it
+# never picks up -stdlib=libc++ -- opt it out of CXX_MODULE_STD, which
+# CMAKE_CXX_MODULE_STD would otherwise default onto every target and which
+# then fails toolchain validation for a target with no C++ standard library.
+set_target_properties(${CMAKE_PROJECT_NAME} PROPERTIES CXX_MODULE_STD OFF)
 
 # Add STM32CubeMX generated sources
 add_subdirectory(cmake/stm32cubemx)
+
+# Dummy C++23 module demonstrating `import std;` support
+add_library(dummy_lib)
+target_sources(dummy_lib
+    PUBLIC FILE_SET my_modules TYPE CXX_MODULES FILES
+        App/dummy.cppm
+    PRIVATE
+        App/app_cpp.cpp
+)
+target_include_directories(dummy_lib PRIVATE App)
 
 # Link directories setup
 target_link_directories(${CMAKE_PROJECT_NAME} PRIVATE
@@ -49,6 +75,7 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
 
 # Add include paths
 target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
+    App
     # Add user defined include paths
 )
 
@@ -63,6 +90,7 @@ list(REMOVE_ITEM CMAKE_C_IMPLICIT_LINK_LIBRARIES ob)
 # Add linked libraries
 target_link_libraries(${CMAKE_PROJECT_NAME}
     stm32cubemx
+    dummy_lib
 
     # Add user defined libraries
 )
