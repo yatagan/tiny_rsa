@@ -63,6 +63,20 @@ target_sources(dummy_lib
 )
 target_include_directories(dummy_lib PRIVATE App)
 
+# MAX7219 4-in-1 LED matrix driver + bar-graph demo (C++23 modules, import std).
+# Links stm32cubemx so the modules' global module fragments can #include the
+# HAL headers and clang-scan-deps sees the same -I/-D flags.
+add_library(max7219_lib)
+target_sources(max7219_lib
+    PUBLIC FILE_SET max7219_modules TYPE CXX_MODULES FILES
+        App/max7219.cppm
+        App/max7219_demo.cppm
+    PRIVATE
+        App/app_max7219.cpp
+)
+target_include_directories(max7219_lib PRIVATE App)
+target_link_libraries(max7219_lib PRIVATE stm32cubemx)
+
 # Link directories setup
 target_link_directories(${CMAKE_PROJECT_NAME} PRIVATE
     # Add user defined library search paths
@@ -91,6 +105,7 @@ list(REMOVE_ITEM CMAKE_C_IMPLICIT_LINK_LIBRARIES ob)
 target_link_libraries(${CMAKE_PROJECT_NAME}
     stm32cubemx
     dummy_lib
+    max7219_lib
 
     # Add user defined libraries
 )

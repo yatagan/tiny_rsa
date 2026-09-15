@@ -22,6 +22,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "app_cpp.h"
+#include "app_max7219.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -86,6 +87,7 @@ int main(void)
   /* Initialize all configured peripherals */
   /* USER CODE BEGIN 2 */
   dummy_result = app_dummy_add(2, 3);
+  app_max7219_demo_init();
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -95,6 +97,7 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+    app_max7219_demo_step();
   }
   /* USER CODE END 3 */
 }
