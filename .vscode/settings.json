@@ -1,4 +1,6 @@
 {
+    "stm32cube-ide-clangd.enable": true,
+    "C_Cpp.intelliSenseEngine": "disabled",
     "cmake.cmakePath": "cube-cmake",
     "cmake.configureArgs": [
         "-DCMAKE_COMMAND=cube-cmake"

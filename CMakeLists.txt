@@ -76,6 +76,11 @@ target_sources(max7219_lib
 )
 target_include_directories(max7219_lib PRIVATE App)
 target_link_libraries(max7219_lib PRIVATE stm32cubemx)
+# Build the display driver for size, not speed. Its bit-bang SPI loops unroll
+# into ~2.8 KB of straight-line stores under the global -O3, and none of it is
+# hot: the MAX7219 refresh is gated by the display, not by the CPU. Target
+# options come after CMAKE_CXX_FLAGS_<CONFIG>, so this -Os wins over -O3.
+target_compile_options(max7219_lib PRIVATE $<$<CONFIG:Release>:-Os>)
 
 # Link directories setup
 target_link_directories(${CMAKE_PROJECT_NAME} PRIVATE

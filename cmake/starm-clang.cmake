@@ -76,9 +76,9 @@ set(CMAKE_C_FLAGS "${TARGET_FLAGS} ${STARM_C_INCLUDE_FLAGS} ${COMMON_FLAGS}")
 set(CMAKE_CXX_FLAGS "${TARGET_FLAGS} ${STARM_CXX_INCLUDE_FLAGS} ${COMMON_FLAGS} -stdlib=libc++ -fno-rtti -fno-exceptions -fno-threadsafe-statics -Wno-reserved-module-identifier")
 
 set(CMAKE_C_FLAGS_DEBUG "-Og -g3")
-set(CMAKE_C_FLAGS_RELEASE "-Oz -g0")
+set(CMAKE_C_FLAGS_RELEASE "-O3 -g0")
 set(CMAKE_CXX_FLAGS_DEBUG "-Og -g3")
-set(CMAKE_CXX_FLAGS_RELEASE "-Oz -g0")
+set(CMAKE_CXX_FLAGS_RELEASE "-O3 -g0")
 
 # clang-scan-deps is required for CMake's C++ module dependency scanning
 # (-format=p1689, needs Clang >= 16) but is not shipped in the st-arm-clang
