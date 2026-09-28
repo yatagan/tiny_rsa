@@ -70,6 +70,7 @@ add_library(max7219_lib)
 target_sources(max7219_lib
     PUBLIC FILE_SET max7219_modules TYPE CXX_MODULES FILES
         App/max7219.cppm
+        App/bar_graph.cppm
         App/max7219_demo.cppm
     PRIVATE
         App/app_max7219.cpp
@@ -81,6 +82,20 @@ target_link_libraries(max7219_lib PRIVATE stm32cubemx)
 # hot: the MAX7219 refresh is gated by the display, not by the CPU. Target
 # options come after CMAKE_CXX_FLAGS_<CONFIG>, so this -Os wins over -O3.
 target_compile_options(max7219_lib PRIVATE $<$<CONFIG:Release>:-Os>)
+
+# Real-time audio analyzer: MAX9814 -> ADC/DMA -> q15 FFT -> max7219 bars.
+# Keeps the global -O3: fft_q15 and the per-block processing are the hot path.
+add_library(rta_lib)
+target_sources(rta_lib
+    PUBLIC FILE_SET rta_modules TYPE CXX_MODULES FILES
+        App/audio_adc.cppm
+        App/fft_q15.cppm
+        App/rta.cppm
+    PRIVATE
+        App/app_rta.cpp
+)
+target_include_directories(rta_lib PRIVATE App)
+target_link_libraries(rta_lib PRIVATE stm32cubemx max7219_lib)
 
 # Link directories setup
 target_link_directories(${CMAKE_PROJECT_NAME} PRIVATE
@@ -111,6 +126,7 @@ target_link_libraries(${CMAKE_PROJECT_NAME}
     stm32cubemx
     dummy_lib
     max7219_lib
+    rta_lib
 
     # Add user defined libraries
 )

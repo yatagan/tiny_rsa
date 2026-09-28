@@ -8,27 +8,15 @@ module;
 export module max7219_demo;
 import std;
 import max7219;
+import bar_graph;
 
 namespace {
 
-constexpr std::uint32_t kFramePeriodMs    = 33;  // ~30 fps
-constexpr std::uint8_t  kDecayPerFrame    = 6;   // level units (0..255) per frame
-constexpr std::uint8_t  kPeakHoldFrames   = 12;
-constexpr std::uint8_t  kPeakFallPerFrame = 3;
+constexpr std::uint32_t kFramePeriodMs = 33;  // ~30 fps
 
 // 0..255 triangle wave over an 8-bit phase.
 constexpr std::uint8_t tri(std::uint8_t phase) {
     return static_cast<std::uint8_t>(phase < 128 ? phase * 2 : (255 - phase) * 2);
-}
-
-// 0..255 level -> 0..8 bar height.
-constexpr std::uint8_t height_from_level(std::uint8_t level) {
-    return static_cast<std::uint8_t>((level + 16) / 32);
-}
-
-// Bar of height h: the bottom h rows lit (bit r = row r, r = 0 top).
-constexpr std::uint8_t column_mask(std::uint8_t h) {
-    return static_cast<std::uint8_t>(0xFFu << (8 - h));
 }
 
 class BarGraphDemo {
@@ -48,7 +36,7 @@ public:
         last_ms_ = now;
         ++t_;
 
-        std::array<std::uint8_t, max7219::kWidth> cols{};
+        std::array<std::uint8_t, max7219::kWidth> targets{};
         for (std::size_t x = 0; x < max7219::kWidth; ++x) {
             // Two triangle "hills" drifting in opposite directions plus a
             // little LFSR jitter, so the bars look like a live spectrum.
@@ -56,34 +44,10 @@ public:
             const auto p2 = static_cast<std::uint8_t>(x * 9 + 64 - t_ * 3);
             auto target = static_cast<std::uint16_t>((tri(p1) + tri(p2)) / 2);        // 0..255
             target = static_cast<std::uint16_t>(target * 3 / 4 + (lfsr_next() & 0x3F));  // 0..254
-
-            std::uint8_t& lvl = level_[x];
-            if (target > lvl) {
-                lvl = static_cast<std::uint8_t>(target);  // instant attack
-            } else {
-                lvl = static_cast<std::uint8_t>(lvl > kDecayPerFrame ? lvl - kDecayPerFrame : 0);
-            }
-
-            std::uint8_t& pk = peak_[x];
-            if (lvl >= pk) {
-                pk = lvl;
-                hold_[x] = kPeakHoldFrames;
-            } else if (hold_[x] > 0) {
-                --hold_[x];
-            } else {
-                pk = static_cast<std::uint8_t>(pk > kPeakFallPerFrame ? pk - kPeakFallPerFrame : 0);
-            }
-
-            const std::uint8_t h  = height_from_level(lvl);
-            const std::uint8_t ph = height_from_level(pk);
-            std::uint8_t mask = column_mask(h);
-            if (ph > h) {
-                mask |= static_cast<std::uint8_t>(1u << (8 - ph));  // peak-hold dot
-            }
-            cols[x] = mask;
+            targets[x] = static_cast<std::uint8_t>(target);
         }
 
-        display_.set_columns(cols);
+        display_.set_columns(bars_.update(targets));
         display_.flush();
     }
 
@@ -99,9 +63,7 @@ private:
     }
 
     max7219::Max7219 display_{};
-    std::array<std::uint8_t, max7219::kWidth> level_{};
-    std::array<std::uint8_t, max7219::kWidth> peak_{};
-    std::array<std::uint8_t, max7219::kWidth> hold_{};
+    bar_graph::BarGraph<max7219::kWidth> bars_{};
     std::uint16_t lfsr_    = 0xACE1u;  // any non-zero seed
     std::uint16_t t_       = 0;
     std::uint32_t last_ms_ = 0;

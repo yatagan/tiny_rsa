@@ -23,6 +23,7 @@
 /* USER CODE BEGIN Includes */
 #include "app_cpp.h"
 #include "app_max7219.h"
+#include "app_rta.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -32,6 +33,8 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
+/* 1: run the animated max7219 display demo instead of the audio analyzer. */
+#define APP_DISPLAY_DEMO 0
 
 /* USER CODE END PD */
 
@@ -87,7 +90,11 @@ int main(void)
   /* Initialize all configured peripherals */
   /* USER CODE BEGIN 2 */
   dummy_result = app_dummy_add(2, 3);
+#if APP_DISPLAY_DEMO
   app_max7219_demo_init();
+#else
+  app_rta_init();
+#endif
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -97,7 +104,11 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+#if APP_DISPLAY_DEMO
     app_max7219_demo_step();
+#else
+    app_rta_step();
+#endif
   }
   /* USER CODE END 3 */
 }
